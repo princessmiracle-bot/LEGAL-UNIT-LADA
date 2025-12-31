@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<title>Tambah Surat | Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;font-family:'Inter',sans-serif;}
+body{margin:0;background:#f4f7fb;}
+.container{max-width:900px;margin:30px auto;background:#fff;padding:30px;border-radius:18px;box-shadow:0 20px 40px rgba(0,0,0,.08);}
+h2{margin-top:0;color:#2f66d4}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.full{grid-column:1/-1}
+label{font-size:13px;font-weight:500}
+input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;font-size:13px}
+input[readonly]{background:#f1f3f7}
+textarea{min-height:90px}
+.actions{text-align:right;margin-top:20px}
+button{padding:10px 18px;border:none;border-radius:10px;font-size:13px;cursor:pointer}
+.save{background:#2f66d4;color:white}
+.back{background:#ccc}
+
+/* MINIT TINDAKAN – CANVA STYLE */
+.minit-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
+  margin-top:8px;
+}
+.minit-item input{display:none;}
+.minit-item label{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:12px;
+  border-radius:14px;
+  border:1.5px solid #e3e7ef;
+  background:#f8faff;
+  cursor:pointer;
+  font-size:13px;
+  transition:.25s;
+}
+.minit-item input:checked + label{
+  background:#2f66d4;
+  color:#fff;
+  border-color:#2f66d4;
+  box-shadow:0 8px 20px rgba(47,102,212,.25);
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>Tambah / Edit Surat</h2>
+
+<div class="grid">
+
+<div>
+<label>Bil.</label>
+<input type="text" id="bil" readonly>
+</div>
+
+<div>
+<label>Kategori</label>
+<select id="kategori">
+<option>Memo</option>
+<option>Surat/Dokumen</option>
+<option>Emel</option>
+<option>DDMS</option>
+</select>
+</div>
+
+<div>
+<label>Tarikh Terima</label>
+<input type="date" id="tarikhTerima">
+</div>
+
+<div>
+<label>Tarikh Surat</label>
+<input type="date" id="tarikhSurat">
+</div>
+
+<div class="full">
+<label>Perkara / Tajuk</label>
+<input type="text" id="perkara">
+</div>
+
+<div>
+<label>Pengirim</label>
+<select id="pengirim">
+<option>Dalaman LADA</option>
+<option>Organisasi / Pihak Luar</option>
+<option>Peguam</option>
+</select>
+</div>
+
+<div>
+<label>Nama Pengirim</label>
+<input type="text" id="namaPengirim">
+</div>
+
+<div class="full">
+<label>Minit Tindakan</label>
+<div class="minit-grid checkbox-group">
+
+  <div class="minit-item"><input type="checkbox" id="m1" value="Sila bincang"><label for="m1">Sila bincang</label></div>
+  <div class="minit-item"><input type="checkbox" id="m2" value="Untuk perhatian"><label for="m2">Untuk perhatian</label></div>
+  <div class="minit-item"><input type="checkbox" id="m3" value="Untuk tindakan"><label for="m3">Untuk tindakan</label></div>
+  <div class="minit-item"><input type="checkbox" id="m4" value="Edaran"><label for="m4">Edaran</label></div>
+  <div class="minit-item"><input type="checkbox" id="m5" value="Failkan"><label for="m5">Failkan</label></div>
+  <div class="minit-item"><input type="checkbox" id="m6" value="Maklum"><label for="m6">Maklum</label></div>
+  <div class="minit-item"><input type="checkbox" id="m7" value="Saya hadir"><label for="m7">Saya hadir</label></div>
+  <div class="minit-item"><input type="checkbox" id="m8" value="Saya tidak hadir"><label for="m8">Saya tidak hadir</label></div>
+  <div class="minit-item"><input type="checkbox" id="m9" value="Sila hadir"><label for="m9">Sila hadir</label></div>
+  <div class="minit-item"><input type="checkbox" id="m10" value="Sila hadir bersama"><label for="m10">Sila hadir bersama</label></div>
+
+</div>
+</div>
+
+<div class="full">
+<label>Kepada</label>
+<input type="text" id="kepada">
+</div>
+
+<div class="full">
+<label>Catatan</label>
+<textarea id="catatan"></textarea>
+</div>
+
+<div>
+<label>Tarikh Edar</label>
+<input type="date" id="tarikhEdar">
+</div>
+
+</div>
+
+<div class="actions">
+<button class="back" onclick="history.back()">Kembali</button>
+<button class="save" onclick="simpan()">Simpan</button>
+</div>
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem("suratUU")) || [];
+let editIndex = localStorage.getItem("editIndex");
+
+if(editIndex !== null){
+  let s = data[editIndex];
+  bil.value = s.bil || "";
+
+  kategori.value = s.kategori || "";
+  tarikhTerima.value = s.tarikhTerima || "";
+  tarikhSurat.value = s.tarikhSurat || "";
+  tarikhEdar.value = s.tarikhEdar || "";
+  perkara.value = s.perkara || "";
+  pengirim.value = s.pengirim || "";
+  namaPengirim.value = s.namaPengirim || "";
+  kepada.value = s.kepada || "";
+  catatan.value = s.catatan || "";
+
+  document.querySelectorAll(".checkbox-group input").forEach(c=>{
+    if(Array.isArray(s.minit) && s.minit.includes(c.value)){
+      c.checked = true;
+    }
+  });
+}else{
+  bil.value = String(data.length + 1).padStart(3,"0");
+}
+
+function simpan(){
+  let minit = [];
+  document.querySelectorAll(".checkbox-group input:checked")
+    .forEach(c=>minit.push(c.value));
+
+  let surat = {
+    bil: bil.value,
+    kategori: kategori.value,
+    tarikhTerima: tarikhTerima.value,
+    tarikhSurat: tarikhSurat.value,
+    tarikhEdar: tarikhEdar.value,
+    perkara: perkara.value,
+    pengirim: pengirim.value,
+    namaPengirim: namaPengirim.value,
+    minit: minit,
+    kepada: kepada.value,
+    catatan: catatan.value
+  };
+
+  if(editIndex !== null){
+    data[editIndex] = surat;
+    localStorage.removeItem("editIndex");
+  }else{
+    data.push(surat);
+  }
+
+  localStorage.setItem("suratUU", JSON.stringify(data));
+  location.href = "admin-dashboard.html";
+}
+</script>
+
+</body>
+</html>

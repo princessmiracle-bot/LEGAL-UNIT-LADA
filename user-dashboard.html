@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard Program | Unit Undang-Undang</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;font-family:'Inter',sans-serif}
+body{margin:0;background:#f4f7fb;color:#333}
+
+/* HEADER */
+header{
+  background:#fff;padding:16px 40px;
+  display:flex;justify-content:space-between;align-items:center;
+  box-shadow:0 4px 20px rgba(0,0,0,.06)
+}
+header h1{margin:0;font-size:18px;color:#2f66d4}
+nav a{margin-left:28px;text-decoration:none;color:#333;font-weight:500}
+nav a:hover{color:#2f66d4}
+
+/* LAYOUT */
+.container{
+  max-width:1600px;margin:30px auto;padding:0 20px;
+  display:grid;grid-template-columns:3fr 1fr;gap:24px
+}
+.card{
+  background:#fff;border-radius:18px;padding:22px;
+  box-shadow:0 15px 35px rgba(0,0,0,.08);
+  margin-bottom:20px
+}
+.section-title{font-size:15px;font-weight:600;margin-bottom:12px}
+
+/* STATUS BADGE */
+.badge{
+  padding:4px 10px;border-radius:20px;
+  font-size:11px;font-weight:600;display:inline-block
+}
+.belum{background:#ffcccc;color:#a80000}
+.proses{background:#fff3b0;color:#8a6d00}
+.selesai{background:#d4f8d4;color:#0a7a0a}
+
+/* TABLE */
+.table-wrapper{
+  background:#fff;border-radius:18px;
+  overflow:auto;box-shadow:0 18px 40px rgba(0,0,0,.08)
+}
+table{width:100%;border-collapse:collapse}
+th,td{padding:14px;font-size:13px;border-bottom:1px solid #eee}
+th{background:#f1f4fb}
+
+/* REMINDER */
+.reminder{
+  background:linear-gradient(135deg,#fff4d6,#ffeaa7);
+  border-radius:18px;padding:20px;
+  box-shadow:0 15px 35px rgba(0,0,0,.1);
+  position:sticky;top:20px
+}
+.reminder-item{
+  background:#fff;padding:12px;border-radius:12px;
+  margin-bottom:10px
+}
+.reminder-item small{font-size:12px;color:#7a5c00}
+.hari-lagi{display:block;font-size:12px;margin-top:6px;color:#7a5c00}
+
+/* SEARCH */
+.search-box input{
+  width:100%;padding:10px;border-radius:10px;
+  border:1px solid #ddd;font-size:13px;margin-bottom:12px
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>Program Unit Undang-Undang</h1>
+<nav>
+<a href="index.html">Utama</a>
+<a href="admin-programlogin.html">Login Admin</a>
+</nav>
+</header>
+
+<div class="container">
+
+<!-- MAIN -->
+<div>
+
+<!-- HARI INI -->
+<div class="card">
+<div class="section-title">📅 Hari Ini</div>
+<div id="todayBox">Tiada program hari ini</div>
+</div>
+
+<!-- AKAN DATANG -->
+<div class="card">
+<div class="section-title">⏭ Akan Datang</div>
+<div id="upcomingBox">Tiada program akan datang</div>
+</div>
+
+<!-- SENARAI LENGKAP -->
+<div class="card">
+<div class="section-title">📋 Senarai Lengkap Semua Acara</div>
+
+<div class="search-box">
+<input type="text" id="searchInput" placeholder="Cari dalam senarai (tajuk, jenis, PIC, status)">
+</div>
+
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>No</th>
+<th>Jenis</th>
+<th>Tarikh</th>
+<th>Tajuk / Perkara</th>
+<th>PIC / Lokasi</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+<!-- REMINDER -->
+<div>
+<div class="reminder">
+<div class="section-title">⚠ Reminder Maklum Balas</div>
+<div id="reminderBox">Tiada maklum balas</div>
+</div>
+</div>
+
+</div>
+
+<script>
+const data = JSON.parse(localStorage.getItem("programUU")) || [];
+const today = new Date().toISOString().slice(0,10);
+const searchInput = document.getElementById("searchInput");
+
+/* HARI INI */
+document.getElementById("todayBox").innerHTML =
+  data.filter(p=>p.tarikhEvent===today && p.jenis!=="Maklum Balas")
+      .map(p=>`📌 ${p.perkara}`)
+      .join("<br>") || "Tiada program hari ini";
+
+/* AKAN DATANG */
+document.getElementById("upcomingBox").innerHTML =
+  data.filter(p=>p.tarikhEvent>today && p.jenis!=="Maklum Balas")
+      .map(p=>`📅 ${p.tarikhEvent} – ${p.perkara}`)
+      .join("<br>") || "Tiada program akan datang";
+
+/* REMINDER – MAKLUM BALAS + TARIKH & X HARI LAGI */
+const reminderBox = document.getElementById("reminderBox");
+const todayDate = new Date();
+
+function kiraHariLagi(tarikh){
+  if(!tarikh) return null;
+  const due = new Date(tarikh);
+  return Math.ceil((due - todayDate) / (1000 * 60 * 60 * 24));
+}
+
+let reminder = data.filter(p => p.jenis === "Maklum Balas" && p.status !== "Selesai");
+
+// Tambah property 'hariLagi' untuk sort
+reminder.forEach(p => p.hariLagi = kiraHariLagi(p.tarikhEvent));
+
+// Sort: yang hampir / lewat di atas
+reminder.sort((a,b)=>{
+  if(a.hariLagi===null) return 1;
+  if(b.hariLagi===null) return -1;
+  return a.hariLagi - b.hariLagi;
+});
+
+reminderBox.innerHTML = reminder.length ? "" : "Tiada maklum balas";
+
+reminder.forEach(p=>{
+  const hari = p.hariLagi;
+
+  let statusClass = "belum";
+  let teksHari = "Tarikh belum ditetapkan";
+
+  if(hari !== null){
+    if(hari < 0){
+      statusClass = "belum";
+      teksHari = `❗ Lewat ${Math.abs(hari)} hari`;
+    }else if(hari <= 7){
+      statusClass = "proses";
+      teksHari = `⏳ ${hari} hari lagi`;
+    }else{
+      statusClass = "proses";
+      teksHari = `📅 ${hari} hari lagi`;
+    }
+  }
+
+  reminderBox.innerHTML += `
+    <div class="reminder-item">
+      <b>${p.perkara}</b><br>
+      <small>PIC: ${p.pic || "-"}</small><br>
+      <small>Tarikh Serahan: ${p.tarikhEvent || "-"}</small>
+      <div class="hari-lagi">${teksHari}</div>
+      <span class="badge ${statusClass}">${p.status || "Belum"}</span>
+    </div>
+  `;
+});
+
+/* TABLE (VIEW ONLY) */
+function renderTable(){
+  const keyword = searchInput.value.toLowerCase();
+  const body = document.getElementById("tableBody");
+  body.innerHTML="";
+
+  const filtered = data.filter(p=>
+    !keyword ||
+    p.perkara?.toLowerCase().includes(keyword) ||
+    p.jenis?.toLowerCase().includes(keyword) ||
+    p.pic?.toLowerCase().includes(keyword) ||
+    p.status?.toLowerCase().includes(keyword)
+  );
+
+  if(!filtered.length){
+    body.innerHTML=`<tr><td colspan="6" style="text-align:center">Tiada rekod</td></tr>`;
+    return;
+  }
+
+  filtered.forEach((p,i)=>{
+    const statusClass =
+      p.status==="Selesai"?"selesai":
+      p.status==="Dalam Proses"?"proses":"belum";
+
+    body.innerHTML+=`
+    <tr>
+      <td>${i+1}</td>
+      <td>${p.jenis}</td>
+      <td>${p.tarikhEvent || "-"}</td>
+      <td>${p.perkara}</td>
+      <td>${p.tempat || p.pic || "-"}</td>
+      <td><span class="badge ${statusClass}">${p.status || "Belum"}</span></td>
+    </tr>`;
+  });
+}
+
+searchInput.addEventListener("input", renderTable);
+renderTable();
+</script>
+
+</body>
+</html>

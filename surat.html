@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<title>Surat Masuk | Unit Undang-Undang</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+.status-badge{
+  display:inline-block;
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:500;
+}
+
+.status-belum{
+  background:#ffe0e0;
+  color:#c0392b;
+}
+
+.status-proses{
+  background:#fff3cd;
+  color:#b58100;
+}
+
+.status-siap{
+  background:#e3fcef;
+  color:#1e8449;
+}
+
+.hari-lagi{
+  font-size:12px;
+  margin-top:6px;
+  color:#555;
+}
+
+*{box-sizing:border-box;font-family:'Inter',sans-serif;}
+body{margin:0;background:#f4f7fb;color:#333}
+
+/* HEADER */
+header{
+  background:#fff;
+  padding:18px 40px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 6px 24px rgba(0,0,0,.06);
+}
+header h1{margin:0;font-size:18px;color:#2f66d4}
+header span{font-size:12px;color:#777}
+.header-btn{
+  background:#2f66d4;
+  color:#fff;
+  border:none;
+  padding:10px 16px;
+  border-radius:10px;
+  font-size:13px;
+  cursor:pointer;
+  margin-left:10px;
+}
+
+/* CONTAINER */
+.container{
+  max-width:1400px;
+  margin:30px auto;
+  padding:0 20px;
+}
+
+/* FILTER */
+.filter-bar{
+  background:#fff;
+  padding:16px;
+  border-radius:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.06);
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr auto;
+  gap:14px;
+  margin-bottom:20px;
+}
+.filter-bar input,
+.filter-bar select{
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  font-size:13px;
+}
+.filter-bar button{
+  background:#2f66d4;
+  color:white;
+  border:none;
+  border-radius:10px;
+  padding:10px 18px;
+  cursor:pointer;
+}
+
+/* TABLE */
+.table-wrapper{
+  background:#fff;
+  border-radius:18px;
+  overflow:auto;
+  box-shadow:0 18px 40px rgba(0,0,0,.08);
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:1400px;
+}
+th,td{
+  padding:14px;
+  font-size:13px;
+  vertical-align:top;
+}
+th{
+  background:#f1f4fb;
+  font-weight:600;
+}
+tr:not(:last-child){border-bottom:1px solid #eee}
+
+/* EMPTY */
+.empty{
+  text-align:center;
+  padding:40px;
+  color:#777;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div>
+    <h1>Surat Masuk</h1>
+    <span>Unit Undang-Undang · LADA</span>
+  </div>
+  <div>
+    <button class="header-btn" onclick="location.href='index.html'">Utama</button>
+    <button class="header-btn" onclick="location.href='admin-login.html'"> Login Admin
+</button>
+
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- SEARCH & FILTER -->
+  <div class="filter-bar">
+    <input type="text" id="searchInput" placeholder="Cari perkara / pengirim">
+
+    <select id="bulanFilter">
+      <option value="">Semua Bulan</option>
+      <option value="01">Januari</option>
+      <option value="02">Februari</option>
+      <option value="03">Mac</option>
+      <option value="04">April</option>
+      <option value="05">Mei</option>
+      <option value="06">Jun</option>
+      <option value="07">Julai</option>
+      <option value="08">Ogos</option>
+      <option value="09">September</option>
+      <option value="10">Oktober</option>
+      <option value="11">November</option>
+      <option value="12">Disember</option>
+    </select>
+
+    <select id="kategoriFilter">
+      <option value="">Semua Kategori</option>
+      <option>Memo</option>
+      <option>Surat/Dokumen</option>
+      <option>Emel</option>
+      <option>DDMS</option>
+    </select>
+
+    <button onclick="render()">Cari</button>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Kategori</th>
+          <th>Pengirim</th>
+          <th>Tarikh Terima</th>
+          <th>Tarikh Surat</th>
+          <th>Perkara / Tajuk</th>
+          <th>Minit Tindakan</th>
+          <th>Kepada</th>
+          <th>Tarikh Edar</th>
+          <th>Catatan</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem("suratUU")) || [];
+
+function render(){
+  let search = searchInput.value.toLowerCase();
+  let bulan = bulanFilter.value;
+  let kategori = kategoriFilter.value;
+
+  let filtered = data.filter(s=>{
+    let okSearch =
+      s.perkara.toLowerCase().includes(search) ||
+      s.namaPengirim.toLowerCase().includes(search);
+
+    let okBulan = bulan ? s.tarikhTerima?.substring(5,7) === bulan : true;
+    let okKategori = kategori ? s.kategori === kategori : true;
+
+    return okSearch && okBulan && okKategori;
+  });
+
+  tbody.innerHTML = "";
+
+  if(filtered.length === 0){
+    tbody.innerHTML =
+      `<tr><td colspan="10" class="empty">Tiada rekod surat</td></tr>`;
+    return;
+  }
+
+  filtered.forEach(s=>{
+    tbody.innerHTML += `
+      <tr>
+        <td>${s.bil}</td>
+        <td>${s.kategori}</td>
+        <td>${s.namaPengirim}</td>
+        <td>${s.tarikhTerima || "-"}</td>
+        <td>${s.tarikhSurat || "-"}</td>
+        <td>${s.perkara}</td>
+        <td>${s.minit?.join(", ") || "-"}</td>
+        <td>${s.kepada || "-"}</td>
+        <td>${s.tarikhEdar || "-"}</td>
+        <td>${s.catatan || "-"}</td>
+      </tr>
+    `;
+  });
+}
+
+render();
+</script>
+
+</body>
+</html>

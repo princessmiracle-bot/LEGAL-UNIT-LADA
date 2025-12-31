@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<title>Tambah/Edit Program | Unit Undang-Undang</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;font-family:'Inter',sans-serif;}
+body{margin:0;background:#f4f7fb;color:#333;}
+.container{max-width:900px;margin:30px auto;background:#fff;padding:30px;border-radius:18px;box-shadow:0 20px 40px rgba(0,0,0,.08);}
+h2{margin-top:0;color:#2f66d4;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.full{grid-column:1/-1;}
+label{font-size:13px;font-weight:500;}
+input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;font-size:13px;}
+textarea{min-height:80px;}
+button{padding:10px 18px;border:none;border-radius:10px;font-size:13px;cursor:pointer;margin-right:10px;}
+.save{background:#2f66d4;color:white;}
+.back{background:#ccc;}
+.toggle-btns button{padding:10px 14px;border-radius:12px;border:1px solid #ddd;margin-right:10px;cursor:pointer;background:#f1f3f7;}
+.toggle-btns button.active{background:#2f66d4;color:white;border:none;}
+.kehadiran-btn{
+  padding:8px 14px;
+  border-radius:12px;
+  border:1px solid #2f66d4;
+  background:white;
+  color:#2f66d4;
+  cursor:pointer;
+  font-size:13px;
+  transition: all 0.2s ease;
+  margin-right:6px;
+  margin-bottom:6px;
+}
+.kehadiran-btn.selected{
+  background:#2f66d4;
+  color:white;
+  box-shadow:0 4px 10px rgba(47,102,212,0.3);
+}
+.kehadiran-btn:hover{transform:translateY(-2px);}
+</style>
+</head>
+<body>
+
+<div class="container">
+<h2>Tambah / Edit Program</h2>
+
+<div class="grid">
+<div class="full toggle-btns">
+<button data-type="Program" class="active">Program / Kursus</button>
+<button data-type="Mesyuarat" >Mesyuarat / Perbincangan</button>
+<button data-type="Maklum Balas">Maklum Balas</button>
+</div>
+
+<div>
+<label>Bil.</label>
+<input type="text" id="bil" readonly>
+</div>
+
+<div>
+<label>Jenis</label>
+<input type="text" id="jenis" readonly>
+</div>
+
+<div>
+<label>Tarikh Terima</label>
+<input type="date" id="tarikhTerima">
+</div>
+
+<div>
+<label>Tarikh Event / Hantar Maklum Balas</label>
+<input type="date" id="tarikhEvent">
+</div>
+
+<div class="full">
+<label>Perkara / Tajuk</label>
+<input type="text" id="perkara">
+</div>
+
+<div class="full" id="tempatDiv">
+<label>Tempat</label>
+<input type="text" id="tempat">
+</div>
+
+<div class="full" id="pengerusiDiv">
+<label>Pengerusi</label>
+<input type="text" id="pengerusi">
+</div>
+
+<div class="full" id="picDiv" style="display:none">
+<label>PIC</label>
+<input type="text" id="pic">
+</div>
+
+<div class="full" id="catatanDiv">
+<label>Catatan / Detail</label>
+<textarea id="catatan"></textarea>
+</div>
+
+<div class="full" id="kehadiranDiv">
+<label>Kehadiran</label>
+<div id="kehadiranBtns" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;">
+  <button type="button" class="kehadiran-btn" data-value="P(UU)">P(UU)</button>
+  <button type="button" class="kehadiran-btn" data-value="PPK(UU)">PPK(UU)</button>
+  <button type="button" class="kehadiran-btn" data-value="PP(UU)">PP(UU)</button>
+  <button type="button" class="kehadiran-btn" data-value="PPUU">PPUU</button>
+  <button type="button" class="kehadiran-btn" data-value="PTPO1">PTPO1</button>
+  <button type="button" class="kehadiran-btn" data-value="PTPO2">PTPO2</button>
+  <button type="button" class="kehadiran-btn" data-value="PSP">PSP</button>
+</div>
+</div>
+
+<div class="full" id="tindakanDiv" style="display:none">
+<label>Tindakan</label>
+<textarea id="tindakan"></textarea>
+</div>
+
+<div class="full actions" style="margin-top:20px;">
+<button class="back" onclick="history.back()">Kembali</button>
+<button class="save" onclick="simpan()">Simpan</button>
+</div>
+
+</div>
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem("programUU")) || [];
+let editIndex = localStorage.getItem("editIndex");
+
+const jenisInput = document.getElementById("jenis");
+const toggleBtns = document.querySelectorAll(".toggle-btns button");
+const kehadiranBtns = document.querySelectorAll(".kehadiran-btn");
+
+// Toggle jenis
+toggleBtns.forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    toggleBtns.forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    jenisInput.value = btn.dataset.type;
+    updateFields(btn.dataset.type);
+  });
+});
+
+// Update field display
+function updateFields(type){
+  document.getElementById("tempatDiv").style.display = (type!=="Maklum Balas")?"block":"none";
+  document.getElementById("pengerusiDiv").style.display = (type!=="Maklum Balas")?"block":"none";
+  document.getElementById("kehadiranDiv").style.display = (type!=="Maklum Balas")?"block":"none";
+  document.getElementById("picDiv").style.display = (type==="Maklum Balas")?"block":"block";
+  document.getElementById("tindakanDiv").style.display = (type==="Maklum Balas")?"block":"block";
+}
+
+// Auto bil
+if(editIndex!==null){
+  let p = data[editIndex];
+  bil.value = p.bil;
+  jenisInput.value = p.jenis;
+  document.querySelector(`.toggle-btns button[data-type="${p.jenis}"]`).classList.add("active");
+  tarikhTerima.value = p.tarikhTerima;
+  tarikhEvent.value = p.tarikhEvent || p.tarikhHantar;
+  perkara.value = p.perkara;
+  tempat.value = p.tempat;
+  pengerusi.value = p.pengerusi;
+  pic.value = p.pic;
+  catatan.value = p.catatan;
+  tindakan.value = p.tindakan;
+  // Mark kehadiran
+  if(p.kehadiran){
+    p.kehadiran.forEach(val=>{
+      const btn = document.querySelector(`.kehadiran-btn[data-value="${val}"]`);
+      if(btn) btn.classList.add("selected");
+    });
+  }
+  updateFields(p.jenis);
+}else{
+  bil.value = String(data.length+1).padStart(3,"0");
+  jenisInput.value = "Program";
+  updateFields("Program");
+}
+
+// Toggle button click for kehadiran
+kehadiranBtns.forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    btn.classList.toggle("selected");
+  });
+});
+
+// Simpan
+function simpan(){
+  let kehadiranArr=[];
+  document.querySelectorAll(".kehadiran-btn.selected").forEach(btn=>{
+    kehadiranArr.push(btn.dataset.value);
+  });
+  
+  let p = {
+    bil: bil.value,
+    jenis: jenisInput.value,
+    tarikhTerima: tarikhTerima.value,
+    tarikhEvent: tarikhEvent.value,
+    tarikhHantar: tarikhEvent.value,
+    perkara: perkara.value,
+    tempat: tempat.value,
+    pengerusi: pengerusi.value,
+    pic: pic.value,
+    catatan: catatan.value,
+    tindakan: tindakan.value,
+    kehadiran: kehadiranArr
+  };
+  
+  if(editIndex!==null){
+    data[editIndex]=p;
+    localStorage.removeItem("editIndex");
+  }else{
+    data.push(p);
+  }
+  
+  localStorage.setItem("programUU",JSON.stringify(data));
+  location.href="admin-dashboardprogram.html";
+}
+</script>
+
+</body>
+</html>
